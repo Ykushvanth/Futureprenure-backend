@@ -1,0 +1,50 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "start-ws": "node websocket-server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/text-to-speech": "^5.7.0",
+    "@google-cloud/translate": "^8.5.0",
+    "@supabase/supabase-js": "^2.48.1",
+    "@vitalets/google-translate-api": "^9.2.0",
+    "axios": "^1.7.9",
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.21.2",
+    "form-data": "^4.0.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^8.9.3",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^3.3.2",
+    "node-google-translate-skidz": "^1.1.2",
+    "node-tesseract-ocr": "^2.2.1",
+    "nodemailer": "^6.9.16",
+    "peerjs": "^1.5.4",
+    "react-router-dom": "^7.1.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "sqlite": "^4.0.19",
+    "sqlite3": "^5.0.2",
+    "tesseract.js": "^5.1.1",
+    "translate-google": "^1.5.0",
+    "translate-google-api": "^1.0.4",
+    "ws": "^8.x.x"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "engines": {
+    "node": "14.x"
+  }
+}
