@@ -11,6 +11,7 @@ const socketIO = require('socket.io');
 const { sendAppointmentEmail } = require('./utils/emailService');
 
 const multer = require('multer');
+
 // const fs = require('fs');
 
 const Tesseract = require('tesseract.js');
@@ -1018,7 +1019,7 @@ async function analyzeTextUsingRapidAPI(text) {
         }, {
             headers: {
                 'content-type': 'application/json',
-                'X-RapidAPI-Key': '1506e4dd76mshf9f7ad3f25c936ep17f5b0jsn0bebde2dd6c6',
+                'X-RapidAPI-Key': '54bd8d45b5mshbda6cdbbee7fe51p1ad5bfjsn9363f2cba62e',
                 'X-RapidAPI-Host': 'cheapest-gpt-4-turbo-gpt-4-vision-chatgpt-openai-ai-api.p.rapidapi.com'
             }
         });
@@ -1152,7 +1153,7 @@ const analyzeXrayUsingRapidAPI = async (imagePath) => {
         
         const headers = {
             'content-type': 'application/json',
-            'X-RapidAPI-Key': '720627087cmsha09b7303ce1ca5ep1631cbjsn9a61997fdb18',
+            'X-RapidAPI-Key': '54bd8d45b5mshbda6cdbbee7fe51p1ad5bfjsn9363f2cba62e',
             'X-RapidAPI-Host': 'cheapest-gpt-4-turbo-gpt-4-vision-chatgpt-openai-ai-api.p.rapidapi.com'
         };
 
@@ -1892,4 +1893,41 @@ app.post('/api/appointments/:meeting_id/temperature', async (req, res) => {
             details: error.message
         });
     }
+});
+
+app.get('/api/health-metrics/:userId', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!userId) {
+      console.error('No userId provided');
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    console.log('Fetching health metrics for user ID:', userId); // Debug log
+
+    // Query using 'id' column
+    const { data, error } = await supabase
+      .from('users')
+      .select('heart_rate, spo2, temperature')
+      .eq('id', userId) // This matches the 'id' column in the users table
+      .single();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return res.status(400).json({ error: error.message });
+    }
+
+    console.log('Found health metrics:', data); // Debug log
+
+    res.json({
+      heart_rate: data?.heart_rate || '--',
+      spo2: data?.spo2 || '--',
+      temperature: data?.temperature || '--'
+    });
+
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ error: 'Failed to fetch health metrics' });
+  }
 });
