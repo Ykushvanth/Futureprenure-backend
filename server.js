@@ -19,6 +19,10 @@ const axios = require('axios');
 const translate = require('translate-google');
 const textToSpeech = require('@google-cloud/text-to-speech');
 const ttsClient = new textToSpeech.TextToSpeechClient();
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// Initialize Gemini with your API key
+const genAI = new GoogleGenerativeAI("AIzaSyCYlT2PCDSiOzxKP1wQ0ut5IkseGpIhwoA");
 
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, 'uploads');
@@ -55,8 +59,8 @@ const io = socketIO(server, {
 });
 
 // Initialize Supabase
-const supabaseUrl = 'https://fgizrdpnmojwevrqkdjg.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaXpyZHBubW9qd2V2cnFrZGpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDk5ODUsImV4cCI6MjA1NDgyNTk4NX0.xcvyHjBNZyGP5IGy6g2fN79AHjiK4-0ij1UeNwbpoiY';
+const supabaseUrl = 'https://syeftlcapxekqravghmp.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5ZWZ0bGNhcHhla3FyYXZnaG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MTYyMTIsImV4cCI6MjA3MDQ5MjIxMn0.TJve2dU8DoDs2wYbSDW9SFOcrHl5p6iulHnURl59Blc';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Configure CORS
@@ -1102,13 +1106,11 @@ async function handleMedicalReportAnalysis(filePath, language = 'english') {
         console.log('Text extraction completed');
 
         if (!text || text.trim().length < 10) {
-            throw new Error('Could not extract sufficient text from the image. Please ensure the image is clear and contains readable text.');
+            throw new Error('Could not extract sufficient text from the image.');
         }
 
-        console.log('Extracted text:', text.substring(0, 100) + '...');
-
-        // Analyze the extracted text using GPT-4
-        const analysis = await analyzeTextUsingRapidAPI(text);
+        // Change this line to use Gemini instead of RapidAPI
+        const analysis = await analyzeTextUsingGemini(text);
         console.log('Analysis completed');
 
         // Translate the analysis if needed
@@ -1931,3 +1933,57 @@ app.get('/api/health-metrics/:userId', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch health metrics' });
   }
 });
+
+async function analyzeTextUsingGemini(text) {
+    console.log('Starting Gemini analysis');
+    
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        
+        const prompt = {
+            contents: [{
+                role: "user",
+                parts: [{
+                    text: `Analyze this medical report and provide analysis in this exact format:
+
+                    1. Symptoms:
+                    - List all symptoms mentioned
+                    - Be specific and clear
+
+                    2. Diagnosis:
+                    - Provide clear diagnosis
+                    - Include medical terminology with simple explanations
+
+                    3. Severity Level:
+                    - Specify severity (Mild/Moderate/Severe)
+                    - Explain why this level was chosen
+
+                    4. Treatment Recommendations:
+                    - List specific treatments needed
+                    - Include medications if applicable
+                    - Provide lifestyle recommendations
+
+                    5. Recommended Specialist:
+                    - Specialist: [EXACTLY ONE OF: Dermatologist/Cardiologist/Neurologist/Orthopedist/Ophthalmologist/ENT/Gastroenterologist/Pulmonologist/Endocrinologist/Oncologist]
+                    - Reason: [Brief explanation why this specialist is needed]
+
+                    Medical Report to Analyze:
+                    ${text}`
+                }]
+            }]
+        };
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const analysis = response.text();
+
+        if (!analysis) {
+            throw new Error('No analysis generated');
+        }
+
+        return analysis;
+    } catch (error) {
+        console.error('Gemini API Error:', error);
+        throw new Error(`Analysis failed: ${error.message}`);
+    }
+}
